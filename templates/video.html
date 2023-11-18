@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Admin</title>
+    <link rel="stylesheet" href="/static/video.css">
+    <link rel="stylesheet" href="/static/themify-icons/themify-icons.css" >
+    <script src="https://kit.fontawesome.com/9db4ecd8e8.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div id="main">
+        <div id="header">
+            <ul id="nav">
+                <li>
+                    <a style="text-transform: uppercase;">
+                        <i class="nav-user ti-user"></i>
+                        {{ session.name }}
+                    </a>
+                </li>
+                <li><a href="/time_admin">Time</a></li>
+                <li><a href="/video">Video</a></li>
+                <li>
+                    <a href="#">Update
+                        <i class="down-icon ti-angle-down"></i>
+                    </a>
+                    <ul class="subnav">
+                        <li><a href="/update_images_admin">Image</a></li>
+                        <li><a href="/update_password_admin">Password</a></li>
+                    </ul>
+                </li>
+                <li><a href="/search">Search</a></li>
+                <li id="log-out">
+                    <a href="/log_out">
+                        Log out
+                        <i class="fa fa-sign-out" aria-hidden="true"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+    </div>
+
+    <div>
+        <h1 id="title">Streaming</h1>
+    </div>
+
+
+    <div class="main-contain">
+        <div class="column column-0">
+            <img id="video" src="{{ url_for('video_feed1') }}">
+        </div>
+
+        <div class="column column-1">
+            <div class="main-contain1">
+                <div class="image-contain">
+                    <img src="" class="image-display">
+                </div>
+                <div class="text-contain">
+                    <p class="name"></p>
+                    <br>
+                    <p class="username"></p>
+                    <br>
+                    <p class="daytime"></p>
+                    <br>
+                    <p class="real-fake"></p>
+                </div>
+            </div>
+
+            <div class="main-contain1">
+                <div class="image-contain">
+                    <img src="" class="image-display">
+                </div>
+                <div class="text-contain">
+                    <p class="name"></p>
+                    <br>
+                    <p class="username"></p>
+                    <br>
+                    <p class="daytime"></p>
+                    <br>
+                    <p class="real-fake"></p>
+                </div>
+            </div>
+
+            <div class="main-contain1">
+                <div class="image-contain">
+                    <img src="" class="image-display">
+                </div>
+                <div class="text-contain">
+                    <p class="name"></p>
+                    <br>
+                    <p class="username"></p>
+                    <br>
+                    <p class="daytime"></p>
+                    <br>
+                    <p class="real-fake"></p>
+                </div>
+            </div>
+
+            <div class="main-contain1">
+                <div class="image-contain">
+                    <img src="" class="image-display">
+                </div>
+                <div class="text-contain">
+                    <p class="name"></p>
+                    <br>
+                    <p class="username"></p>
+                    <br>
+                    <p class="daytime"></p>
+                    <br>
+                    <p class="real-fake"></p>
+                </div>
+            </div>
+
+            <div class="main-contain1">
+                <div class="image-contain">
+                    <img src="" class="image-display">
+                </div>
+                <div class="text-contain">
+                    <p class="name"></p>
+                    <br>
+                    <p class="username"></p>
+                    <br>
+                    <p class="daytime"></p>
+                    <br>
+                    <p class="real-fake"></p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+    <script>
+
+        $(document).ready(function() {
+            $.ajax({
+                url: "/check_login",
+                type: "POST",
+                contentType: "application/json",
+                success: function(response) {
+                    let reply = JSON.parse(response);
+                    if (reply["login"] == false) {
+                         swal({
+                            text: reply["message"],
+                            icon: "error",
+                         }).then(function() {
+                            window.location.href = "/log_in";
+                         });
+                    }
+                    else {
+                        if (reply["role"] == "user") {
+                            swal({
+                                text: "Bạn không có quyền truy cập vào đường dẫn này",
+                                icon: "error",
+                            }).then(function() {
+                                window.location.href = "/time";
+                            });
+                        }
+                        else if (reply["role"] == "display") {
+                            swal({
+                                text: "Bạn không có quyền truy cập vào đường dẫn này",
+                                icon: "error",
+                            }).then(function() {
+                                window.location.href = "/display";
+                            });
+                        }
+                    }
+                }
+            });
+        });
+
+        function sendRequestToDisplayImg() {
+            $.ajax({
+                url: "/display_images",
+                type: "POST",
+                contentType: "application/json",
+                success: function(response) {
+                    let reply = JSON.parse(response);
+                    if (reply["success"]) {
+                        var images = document.querySelectorAll(".image-display");
+                        var names = document.querySelectorAll(".name");
+                        var usernames = document.querySelectorAll(".username");
+                        var daytimes = document.querySelectorAll(".daytime");
+                        var real_fakes = document.querySelectorAll(".real-fake");
+                        for (var i = 0; i < 5; i++) {
+                            var image = images[i];
+                            image.setAttribute("src", reply["images"][i]);
+                            var name = names[i];
+                            name.innerText = "name: " + reply["message"][i][0];
+                            var username = usernames[i];
+                            username.innerText = "username: " + reply["message"][i][1];
+                            var daytime = daytimes[i];
+                            daytime.innerText = "time: " + reply["message"][i][2];
+                            var real_fake = real_fakes[i];
+                            if (reply["message"][i][4] == "real") {
+                                real_fake.innerHTML = reply["message"][i][4].toUpperCase();
+                                real_fake.style.fontWeight = "bold";
+                                real_fake.style.color = "green";
+                            }
+                            else {
+                                real_fake.innerHTML = reply["message"][i][4].toUpperCase();
+                                real_fake.style.fontWeight = "bold";
+                                real_fake.style.color = "red";
+
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        $(document).ready(function() {
+           setInterval(sendRequestToDisplayImg, 1000);
+        });
+
+        function noBack(){window.history.forward();}
+        noBack();
+        window.onload=noBack;
+        window.onpageshow=function(evt){if(evt.persisted)noBack();}
+        window.onunload=function(){void(0);}
+    </script>
+
+</body>
+
+</html>

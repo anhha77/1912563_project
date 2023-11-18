@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Admin</title>
+    <link rel="stylesheet" href="/static/search.css">
+    <link rel="stylesheet" href="/static/themify-icons/themify-icons.css">
+    <script src="https://kit.fontawesome.com/9db4ecd8e8.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div id="main">
+        <div id="header">
+            <ul id="nav">
+                <li>
+                    <a style="text-transform: uppercase;">
+                        <i class="nav-user ti-user"></i>
+                        {{ session.name }}
+                    </a>
+                </li>
+                <li><a href="/time_admin">Time</a></li>
+                <li><a href="/video">Video</a></li>
+                <li>
+                    <a href="#">Update
+                        <i class="down-icon ti-angle-down"></i>
+                    </a>
+                    <ul class="subnav">
+                        <li><a href="/update_images_admin">Image</a></li>
+                        <li><a href="/update_password_admin">Password</a></li>
+                    </ul>
+                </li>
+                <li><a href="/search">Search</a></li>
+                <li id="log-out">
+                    <a href="/log_out">
+                        Log out
+                        <i class="fa fa-sign-out" aria-hidden="true"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+    </div>
+
+    <div id="title-form">
+        <h1 id="text">
+            Tìm kiếm
+        </h1>
+    </div>
+
+    <div class="form-section">
+        <select>
+            <option value="select-option">select-option</option>
+            <option value="name-username">name-username</option>
+            <option value="time">time</option>
+        </select>
+        <span id="search-option">
+
+        </span>
+
+        <h2 id="result"></h2>
+    </div>
+
+    <div id="table-display"></div>
+
+    <div id="button-section">
+        <button id="button1" class="load-button" onclick="sendData()">Tải thêm</button>
+        <button id="button2" class="load-button" onclick="buttonExport()">Xuất file excel</button>
+    </div>
+
+    <div class="modal">
+        <div class="modal-inner">
+            <div class="modal-top">
+                <div class="modal-title"></div>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="close-icon ti-close"></i>
+                </button>
+            </div>
+            <div class="modal-content"></div>
+            <div class="modal-bottom">
+                <button class="modal-button">Xuất file excel</button>
+                <button id="delete-account" onclick="deleteAccount()">Xóa tài khoản</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="/static/base64decoder.js"></script>
+
+    <script>
+        const modal = document.querySelector('.modal');
+        const select = document.querySelector('select');
+        const count1 = 1;
+        let count2 = 1;
+        let count3 = 0;
+        let select_type = "";
+        var change_input = false;           // Dùng để xem tag input time có thay đổi không
+        let input_name = "";
+        let input_username = "";
+        let time_from_input = "";
+        let time_to_input = "";
+
+        $(document).ready(function() {
+            $.ajax({
+                url: "/check_login",
+                type: "POST",
+                contentType: "application/json",
+                success: function(response) {
+                    let reply = JSON.parse(response);
+                    if (reply["login"] == false) {
+                         swal({
+                            text: reply["message"],
+                            icon: "error",
+                         }).then(function() {
+                            window.location.href = "/log_in";
+                         });
+                    }
+                    else {
+                        if (reply["role"] == "user") {
+                            swal({
+                                text: "Bạn không có quyền truy cập vào đường dẫn này",
+                                icon: "error",
+                            }).then(function() {
+                                window.location.href = "/time";
+                            });
+                        }
+                        else if (reply["role"] == "display") {
+                            swal({
+                                text: "Bạn không có quyền truy cập vào đường dẫn này",
+                                icon: "error",
+                            }).then(function() {
+                                window.location.href = "/display";
+                            });
+                        }
+                    }
+                }
+            });
+        });
+
+        function removeTable() {
+            var tbl = document.querySelector("table");
+            if (tbl) {
+                tbl.parentNode.removeChild(tbl);
+            }
+        }
+
+        function removeTableModal() {
+            var tbl = document.getElementById("table-modal");
+            if (tbl) {
+                tbl.parentNode.removeChild(tbl);
+            }
+        }
+
+        function removeInsideSpan() {
+            var element = document.querySelectorAll("input");
+            // console.log(element.length);
+            if (element.length > 0) {
+                for (let  i = 0; i < element.length; i++) {
+                    element[i].remove();
+                }
+            }
+        }
+
+        function changeInput() {
+            // console.log("hi1");
+            change_input = true;
+            // console.log(change_input);
+        }
+
+        function closeModal() {
+            removeTableModal();
+            modal.classList.remove('open');
+        }
+
+        function load_data(query, select_typeBase64) {
+            let output = '<table id="my-table">';
+            output = output + '<thead>' + '<tr>' +
+                '<th>' + "name" + '</th>' +
+                '<th>' + "username" + '</th>' +
+                '<th>' + "role" + '</th>' +
+                '<th>' + "image" + '</th>' +
+                '<th>' + "user-info" + '</th>' +
+            '</tr>' + '</thead>';
+            let queryBase64 = btoa(query);
+            let count1Base64 = btoa(count1);
+            const dict_values = {select_typeBase64, queryBase64, count1Base64};
+            const s = JSON.stringify(dict_values);
+            $.ajax({
+                url: "/data_search",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(s),
+                success: function(response) {
+                    let reply = JSON.parse(response);
+                    if (reply["success"]) {
+                        let rows = reply["message"].length;
+                        for (var i = 0; i < rows; i++) {
+                            output = output + '<tr>';
+                            for (var j = 0; j < 5; j++) {
+                                if (j == 4) {
+                                    output = output + '<td>' + '<div class="row-index">' + '<button class="info">' + "info" + '</button>' + '</div>' + '</td>';
+                                }
+                                else if (j == 3) {
+                                    // var image = document.createElement("img");
+                                    // image.setAttribute('src', reply["images"][i]);
+                                    // image.setAttribute('height', '50');
+                                    // image.setAttribute('width', '50');
+                                    output = output + '<td>' + '<img class="image-display" src="" height="50" width="50">' + '</td>';
+                                }
+                                else {
+                                    output = output + '<td>' + reply["message"][i][j] + '</td>';
+                                }
+
+                            }
+                            output = output + '</tr>';
+                       }
+                       output = output + '</table>';
+                       var images = document.getElementsByTagName("img");
+                       document.getElementById("result").innerHTML = reply["length"] + " matches found";
+                       document.getElementById("table-display").innerHTML = output;
+                       for (var i = 0; i < images.length; i++) {
+                            var image = images[i];
+                            image.setAttribute("src", reply["images"][i]);
+                       }
+                    }
+                    else {
+                        swal({
+                            text: reply["message"],
+                            icon: "info",
+                        });
+                    }
+                }
+            });
+        }
+
+
+        select.addEventListener('change', function handleChange(event) {
+            // console.log(event.target.value);
+            select_type = event.target.value;
+            let select_typeBase64 = btoa(select_type);
+            if (event.target.value == "name-username") {
+                removeInsideSpan();
+                removeTable();
+                document.getElementById("result").innerHTML = "";
+                var input = document.createElement("input");
+                input.setAttribute('type', 'text');
+                input.classList.add('input-section');
+                input.setAttribute('id', 'search-text');
+                input.setAttribute('placeholder', 'Search');
+                var container = document.getElementById("search-option");
+                container.appendChild(input);
+                document.getElementById("button1").disabled = false;
+                document.getElementById("button2").disabled = true;
+                $("#search-text").keyup(function() {
+                    count2 = 1;
+                    // console.log("hi");
+                    var search = $(this).val();
+                    if (search != "") {
+                        load_data(search, select_typeBase64);
+                    }
+                    else {
+                        document.getElementById("result").innerHTML = "";
+                        removeTable();
+                    }
+                });
+            }
+
+            else if (event.target.value == "time") {
+                removeInsideSpan();
+                removeTable()
+                document.getElementById("result").innerHTML = "";
+                var input1 = document.createElement("input");
+                input1.setAttribute('type', 'datetime-local');
+                input1.classList.add('input-section1');
+                input1.setAttribute('id', 'search-time');
+                input1.setAttribute('onchange', 'changeInput()');
+                var container1 = document.getElementById("search-option");
+                container1.appendChild(input1);
+                var input2 = document.createElement("input");
+                input2.setAttribute('type', 'datetime-local');
+                input2.classList.add('input-section1');
+                input2.setAttribute('id', 'search-time1');
+                input2.setAttribute('onchange', 'changeInput()');
+                container1.appendChild(input2);
+                count3 = 0;
+                document.getElementById("button1").disabled = false;
+                document.getElementById("button2").disabled = false;
+            }
+
+            else {
+                document.getElementById("button1").disabled = false;
+                document.getElementById("button2").disabled = true;
+                removeInsideSpan();
+                removeTable();
+                document.getElementById("result").innerHTML = "";
+            }
+        });
+
+
+        function buttonExport() {
+            time_from_input = document.getElementById("search-time").value;
+            time_to_input = document.getElementById("search-time1").value;
+            if (time_from_input == "" || time_to_input == "") {
+                swal({
+                     text: "Hãy nhập đầy đủ thông tin",
+                     icon: "info",
+                });
+            }
+
+            else {
+                exportExcel();
+            }
+        }
+
+        function modalButtonExport() {
+            const bntExportElement = document.querySelector( '.modal-button' );
+            bntExportElement.addEventListener( 'click', exportExcel );
+        }
+
+        async function exportExcel() {
+            let message = {};
+            var fileName = "";
+
+            if (select_type == "name-username") {
+                message = {
+                    name: input_name,
+                    username: input_username,
+                    type: select_type
+                };
+                fileName = input_name + "_" + input_username + '.xlsx';
+                // console.log("hi");
+            }
+
+            else if (select_type == "time") {
+                message = {
+                    from: time_from_input,
+                    to: time_to_input,
+                    type: select_type
+                };
+                fileName = time_from_input.replace(/T/g, " ") + "_" + time_to_input.replace(/T/g, " ") + '.xlsx';
+                console.log("hi1");
+            }
+
+            let response = await fetch( '/download_excel_api', {
+                method: "POST",
+                credentials: "include",
+                body: JSON.stringify(message),
+                cache: "no-cache",
+                headers: new Headers({"content-type": "application/json"})
+                }
+            );
+            let jsonResponse = await response.json();
+            if (jsonResponse.success == false) {
+                swal({
+                    text: "Thông tin tìm kiếm không có trong dữ liệu",
+                    icon: "info"
+                });
+            }
+            else {
+                bufferExcelFile = base64DecToArr(jsonResponse.data[0]).buffer;
+                console.log(bufferExcelFile);
+                let blobExcelFile = new Blob([bufferExcelFile]);
+                downloadExcelSilently( blobExcelFile, fileName );
+            }
+
+        }
+
+        function downloadExcelSilently( blobExcelFile, filename ) {
+            const url = window.URL.createObjectURL( blobExcelFile );
+            const hiddenAnchor = document.createElement( "a" );
+            hiddenAnchor.style.display = "none";
+            hiddenAnchor.href = url;
+            hiddenAnchor.download = filename;
+            document.body.appendChild( hiddenAnchor );
+            hiddenAnchor.click();
+            window.URL.revokeObjectURL( url );
+        }
+
+        function deleteAccount() {
+            input_nameBase64 = btoa(input_name);
+            input_usernameBase64 = btoa(input_username);
+            dict_values = {input_nameBase64, input_usernameBase64};
+            s = JSON.stringify(dict_values);
+            $.ajax({
+                url: "/delete_account",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(s),
+                success: function(response) {
+                    let reply = JSON.parse(response);
+                    if (reply["success"]) {
+                        swal({
+                            text: reply["message"],
+                            icon: "success"
+                        }).then(function() {
+                            closeModal();
+                            removeTable();
+                            count2 = 1;
+                            document.getElementById("search-text").value = "";
+                            document.getElementById("result").innerHTML = "";
+                        });
+                    }
+                    else {
+                        swal({
+                            text: reply["message"],
+                            icon: "info"
+                        });
+                    }
+                }
+            });
+        }
+
+        function sendData() {
+            if (select_type == "name-username") {
+                query = document.getElementById("search-text").value;
+                if (query != "") {
+                    let output = '<table id="my_table">';
+                    output = output + '<thead>' + '<tr>' +
+                        '<th>' + "name" + '</th>' +
+                        '<th>' + "username" + '</th>' +
+                        '<th>' + "role" + '</th>' +
+                        '<th>' + "image" + '</th>' +
+                        '<th>' + "user info" + '</th>' +
+                    '</tr>' + '</thead>';
+                    queryBase64 = btoa(query);
+                    count2 = count2 + 1;
+                    count2Base64 = btoa(count2);
+                    let select_typeBase64 = btoa(select_type);
+                    dict_values = {select_typeBase64, queryBase64, count2Base64};
+                    s = JSON.stringify(dict_values);
+                    // console.log(s);
+                    $.ajax({
+                        url: "/data_search",
+                        type: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify(s),
+                        success: function(response) {
+                            let reply = JSON.parse(response);
+                            if (reply["success"]) {
+                                let rows = reply["message"].length;
+                                // console.log(rows);
+                                for (var i = 0; i < rows; i++) {
+                                    output = output + '<tr>';
+                                    for (var j = 0; j < 5; j++) {
+                                        if (j == 4) {
+                                            output = output + '<td>' + '<div class="row-index">' + '<button class="info">' + "info" +'</button>' + '</div>' + '</td>';
+                                        }
+                                        else if (j == 3) {
+                                            output = output + '<td>' + '<img class="image-display" src="" height="50" width="50">' + '</td>';
+                                        }
+                                        else {
+                                            output = output + '<td>' + reply["message"][i][j] + '</td>';
+                                        }
+
+                                    }
+                                    output = output + '</tr>';
+                               }
+                               output = output + '</table>';
+                               var images = document.getElementsByTagName("img");
+                               document.getElementById("table-display").innerHTML = output;
+                               for (var i = 0; i < images.length; i++) {
+                                    var image = images[i];
+                                    image.setAttribute("src", reply["images"][i]);
+                               }
+                            }
+                        }
+                    });
+                }
+
+                else {
+                    swal({
+                        text: "Hãy nhập từ vào ô tìm kiếm",
+                        icon: "info",
+                    });
+                }
+            }
+
+            else if (select_type == "time") {
+                let time_from = document.getElementById("search-time").value;
+                let time_to = document.getElementById("search-time1").value;
+                // console.log("time_from", time_from);
+                // console.log("time_to", time_to);
+                if (time_from == "" || time_to == "") {
+                    removeTable();
+                    document.getElementById("result").innerHTML = "";
+                    swal({
+                        text: "Hãy nhập đầy đủ thông tin",
+                        icon: "info",
+                    });
+                }
+                else {
+                    let output = '<table id="my-table">';
+                    output = output + '<thead>' + '<tr>' +
+                        '<th>' + "name" + '</th>' +
+                        '<th>' + "username" + '</th>' +
+                        '<th>' + "day_time" + '</th>' +
+                        '<th>' + "image" + '</th>' +
+                        '<th>' + "Real/Fake" + '</th>' +
+                    '</tr>' + '</thead>';
+                    let time_fromBase64 = btoa(time_from);
+                    let time_toBase64 = btoa(time_to);
+                    let select_typeBase64 = btoa(select_type);
+                    if (change_input == true) {
+                        change_input = false;
+                        removeTable();
+                        count3 = 0;
+                    }
+                    count3 = count3 + 1;
+                    let count3Base64 = btoa(count3)
+                    dict_values = {select_typeBase64, time_fromBase64, time_toBase64, count3Base64}
+                    s = JSON.stringify(dict_values);
+                    $.ajax({
+                        url: "/data_search",
+                        type: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify(s),
+                        success: function(response) {
+                            let reply = JSON.parse(response);
+                            if (reply["success"]) {
+                                let rows = reply["message"].length;
+                                // console.log(rows);
+                                for (var i = 0; i < rows; i++) {
+                                    output = output + '<tr>';
+                                    for (var j = 0; j < 5; j++) {
+                                        if (j == 3) {
+                                            output = output + '<td>' + '<img class="image-display" src="" height="50" width="50">' + '</td>';
+                                        }
+                                        else if (j == 4) {
+                                            if (reply["message"][i][j] == "real") {
+                                                output = output + '<td style="color:green; font-weight:bold">' + reply["message"][i][j].toUpperCase() + '</td>';
+                                            }
+                                            else {
+                                                output = output + '<td style="color:red; font-weight:bold">' + reply["message"][i][j].toUpperCase() + '</td>';
+                                            }
+                                        }
+                                        else {
+                                            output = output + '<td>' + reply["message"][i][j] + '</td>';
+                                        }
+                                    }
+                                    output = output + '</tr>';
+                               }
+                               output = output + '</table>';
+                               var images = document.getElementsByTagName("img");
+                               document.getElementById("result").innerHTML = reply["length"] + " matches found";
+                               document.getElementById("table-display").innerHTML = output;
+                               for (var i = 0; i < images.length; i++) {
+                                    var image = images[i];
+                                    image.setAttribute("src", reply["images"][i]);
+                               }
+                            }
+
+                            else {
+                                document.getElementById("result").innerHTML = "";
+                                swal({
+                                    text: "Thông tin tìm kiếm không có trong dữ liệu",
+                                    icon: "info",
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+
+            else {
+                swal({
+                    text: "Hãy lựa chọn cách tìm kiếm",
+                    icon: "info",
+                });
+            }
+
+        }
+
+
+        $(document).on('click', '.row-index button', function(event) {
+            // console.log($(this).closest('td').index());
+            // console.log($(this).closest('tr').index());
+            var currentRow = $(this).closest('tr');
+            var name = currentRow.find("td:eq(0)").text();
+            var username = currentRow.find("td:eq(1)").text();
+            var role = currentRow.find("td:eq(2)").text();
+            // var data = name +"\n" + username + "\n" + role;
+            // alert(data);
+            nameBase64 = btoa(name);
+            usernameBase64 = btoa(username);
+            dict_values = {nameBase64, usernameBase64}
+            s = JSON.stringify(dict_values);
+            // console.log(s);
+             $.ajax({
+                url: "/view_user_modal",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(s),
+                success: function(response) {
+                    let reply = JSON.parse(response);
+                    if (reply["success"]) {
+                        let output = '<table id="table-modal">';
+                        output = output + '<thead>' + '<tr>' +
+                            '<th style="text-align:center">' + "day_time" + '</th>' +
+                            '<th style="text-align:center">' + "image" + '</th>' +
+                            '<th style="text-align:center">' + "Real/Fake" + '</th>' +
+                        '</tr>' + '</thead>';
+                        let rows = reply["message"].length;
+                        for (var i = 0; i < rows; i++) {
+                            output = output + '<tr>';
+                            for (var j = 0; j < 3; j++) {
+                                if (j == 1) {
+                                    output = output + '<td>' + '<img class="image-display image-modal center" src="" height="50" width="50">' + '</td>';
+                                }
+                                else if (j == 2) {
+                                    if (reply["message"][i][j] == "real") {
+                                        output = output + '<td style="text-align:center; color:green; font-weight:bold">' + reply["message"][i][j].toUpperCase() + '</td>';
+                                    }
+                                    else {
+                                        output = output + '<td style="text-align:center; color:red; font-weight:bold">' + reply["message"][i][j].toUpperCase() + '</td>';
+                                    }
+                                }
+                                else {
+                                    output = output + '<td style="text-align:center">' + reply["message"][i][j] + '</td>';
+                                }
+                            }
+                            output = output + '</tr>';
+                        }
+                        output = output + '</table>';
+                        modal.classList.add('open');
+                        document.querySelector(".modal-title").innerHTML = "";
+                        document.querySelector(".modal-content").innerHTML = "";
+                        document.querySelector(".modal-title").innerHTML = reply["name"] + "-" + reply["username"];
+                        document.querySelector(".modal-content").innerHTML = output;
+                        var modal_images = document.querySelectorAll(".image-modal");
+                        for (var i = 0; i < modal_images.length; i++) {
+                            var modal_image = modal_images[i];
+                            modal_image.setAttribute("src", reply["images"][i]);
+                        }
+                        input_name = name;
+                        input_username = username;
+                        modalButtonExport();
+                    }
+                }
+             });
+        });
+
+        function noBack(){window.history.forward();}
+        noBack();
+        window.onload=noBack;
+        window.onpageshow=function(evt){if(evt.persisted)noBack();}
+        window.onunload=function(){void(0);}
+    </script>
+</body>
+</html>
