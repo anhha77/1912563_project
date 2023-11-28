@@ -4,8 +4,6 @@
 
 We must install redis-server and kafka-server for Jetson Nano.
 
----
-
 ### Run kafka-server
 
 - Open terminal and cd to kafka.
@@ -28,8 +26,6 @@ We must install redis-server and kafka-server for Jetson Nano.
 - python3 face_recognize.py.
 
 ## Result
-
----
 
 ### Face recognition
 
