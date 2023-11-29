@@ -58,3 +58,56 @@ We must install redis-server and kafka-server for Jetson Nano.
 - When task done the status is a green tick, result and time are available.
 
 ### Admin
+
+In addtion to features like user, admin can monitor attendance activities and search user.
+
+- Search user
+
+![](./result/Screenshot%202023-08-21%20112655.png "UI for search user")
+
+There are two ways to search user by name or by time range:
+
+- Search by name
+
+![](./result/Screenshot%202023-08-21%20112855.png "Seach user by name (1)")
+
+![](./result/Screenshot%202023-08-21%20112916.png "Search user by name (2)")
+
+- Search by time range
+
+![](./result/Screenshot%202023-08-21%20113500.png "Search user by time range")
+
+- Delete user from databse
+
+![](./result/Screenshot%202023-08-21%20113159.png "Delete user from database (1)")
+
+![](./result/Screenshot%202023-08-21%20113412.png "Delete user from database (2)")
+
+- Sign up
+
+To sign up user enter name, username and password and upload 5 portrait images.
+
+![](./result/Screenshot%202023-09-19%20215526.png "UI for sign up")
+
+![](./result/Screenshot%202023-08-21%20113827.png "User that doesnt in database")
+
+![](./result/Screenshot%202023-09-19%20223242.png "Sign up")
+
+![](./result/Screenshot%202023-08-21%20114111.png "Sign up completed")
+
+## Disadvantages when using Jetson Nano as server
+
+We have to use swap file to deal with the limit in memory of Jetson and it affect to the speed of system.
+
+![](./result/Screenshot%20from%202023-08-21%2011-38-40.png "Jetson memory")
+
+## References
+
+- J. Deng, J. Guo, J. Yang, N. Xue, I. Kotsia and Z. Stefanos, "ArcFace: Additive Angular
+  Margin Loss for Deep".
+
+- W. Liu, Y. Wen, Z. Yu, M. Li, B. Raj and L. Song, "SphereFace: Deep Hypersphere
+  Embedding for Face Recognition".
+
+- F. Schroff, D. Kalenichenko and J. Philbin, "FaceNet: A Unified Embedding for Face
+  Recognition and Clustering".
