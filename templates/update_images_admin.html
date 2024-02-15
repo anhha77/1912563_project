@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Admin</title>
+    <link rel="stylesheet" href="/static/update_images_admin.css">
+    <link rel="stylesheet" href="/static/themify-icons/themify-icons.css">
+    <script src="https://kit.fontawesome.com/9db4ecd8e8.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div id="main">
+        <div id="header">
+            <ul id="nav">
+                <li>
+                    <a style="text-transform: uppercase;">
+                        <i class="nav-user ti-user"></i>
+                        {{ session.name }}
+                    </a>
+                </li>
+                <li><a href="/time_admin">Time</a></li>
+                <li><a href="/video">Video</a></li>
+                <li>
+                    <a href="#">Update
+                        <i class="down-icon ti-angle-down"></i>
+                    </a>
+                    <ul class="subnav">
+                        <li><a href="/update_images_admin">Image</a></li>
+                        <li><a href="/update_password_admin">Password</a></li>
+                    </ul>
+                </li>
+                <li><a href="/search">Search</a></li>
+                <li id="log-out">
+                    <a href="/log_out">
+                        Log out
+                        <i class="fa fa-sign-out" aria-hidden="true"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+    </div>
+
+     <div id="title-form">
+        <h1 id="text">
+            Update Images
+        </h1>
+    </div>
+
+    <div class="form-section">
+        <button id="capture" onclick="openModalCam()">
+            <i class="fa-solid fa-camera"></i>
+        </button>
+        <input id="fileInput" type="file" name="file" onchange="imageUploaded()" multiple>
+        <button id="search" class="button" onclick="openModalSearch()">
+            <i class="fa-solid fa-list-check"></i>
+        </button>
+        <button id="update" class="button" onclick="sendData()">Update</button>
+    </div>
+
+    <div class="modal modal-camera">
+        <div class="modal-inner camera">
+            <div class="modal-top">
+                <div class="modal-title"></div>
+            </div>
+            <div class="modal-content row">
+                <div class="column">
+                    <video id="video" width="560" height="480" autoplay></video>
+                </div>
+                <div id="preview-images" class="column"></div>
+            </div>
+            <div class="modal-bottom">
+                <button class="modal-button" onclick="Capture()">Chụp ảnh</button>
+                <button class="modal-button" onclick="storeImage()">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal modal-search">
+        <div class="modal-inner search">
+            <div class="modal-top">
+                <div class="modal-title">Kiểm tra tình trạng</div>
+                <button class="modal-close" onclick="closeModalSearch()">
+                    <i class="close-icon ti-close"></i>
+                </button>
+            </div>
+            <div class="modal-content content-search"></div>
+            <div class="modal-bottom"></div>
+        </div>
+    </div>
+
+    <hr class="line">
+    <div id="images"></div>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+    <script type="text/javascript">
+        let base64String = "";
+        let base64List = [];
+        let string_img = [];
+        let fileSize = 0;
+        let capture = false;
+        const modal_search = document.querySelector('.modal-search');
+        const modal_camera = document.querySelector('.modal-camera');
+        const byteSize = str => new Blob([str]).size;
+
+        $(document).ready(function() {
+            $.ajax({
+                url: "/check_login",
+                type: "POST",
+                contentType: "application/json",
+                success: function(response) {
+                    let reply = JSON.parse(response);
+                    if (reply["login"] == false) {
+                         swal({
+                            text: reply["message"],
+                            icon: "error",
+                         }).then(function() {
+                            window.location.href = "/log_in";
+                         });
+                    }
+                    else {
+                        if (reply["role"] == "user") {
+                            swal({
+                                text: "Bạn không có quyền truy cập vào đường dẫn này",
+                                icon: "error",
+                            }).then(function() {
+                                window.location.href = "/time";
+                            });
+                        }
+                        else if (reply["role"] == "display") {
+                            swal({
+                                text: "Bạn không có quyền truy cập vào đường dẫn này",
+                                icon: "error",
+                            }).then(function() {
+                                window.location.href = "/display";
+                            });
+                        }
+                    }
+                }
+            });
+        });
+
+        function isFileImage(file) {
+             const acceptedImageTypes = ['image/gif', 'image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+
+             return file && acceptedImageTypes.includes(file['type'])
+        }
+
+        function imageUploaded() {
+            capture = false;
+            let checkImage = true;
+            var inputElement = document.getElementById("fileInput");
+            var fileList = inputElement.files;
+            let element = document.querySelectorAll(".image_box");
+            fileSize = 0;
+            base64String = "";
+            base64List = [];
+            for (let i = 0; i < element.length; i++)
+            {
+                element[i].remove();
+            }
+            // console.log(fileList[0]);
+            console.log("Tổng số file đã chọn: " + fileList.length);
+            for (let i = 0; i < fileList.length; i++)
+            {
+                fileSize = fileSize + fileList[i].size;
+                if (isFileImage(fileList[i]) == false) {
+                    // console.log("Ko phải ảnh");
+                    swal({
+                        text: "Tất cả phải là ảnh",
+                        icon: "info",
+                    });
+                    let mess = document.querySelector("#fileInput");
+                    mess.value = "";
+                    checkImage = false;
+                    break;
+                }
+            }
+            fileSize = fileSize/ 1024**2;
+            console.log("kich thuoc:" +fileSize);
+            if (checkImage == true) {
+                let images = document.getElementById('images');
+                for (let i = 0; i < fileList.length; i++)
+                {
+                    var file = document.querySelector(
+                    'input[type=file]')['files'][i];
+
+                    let reader = new FileReader();
+                    console.log("next");
+
+                    reader.onload = function () {
+                        base64String = reader.result.replace("data:", "")
+                            .replace(/^.+,/, "");
+
+                        imageBase64Stringsep = base64String;
+
+                        // alert(imageBase64Stringsep);
+                        // console.log(base64String);
+                        base64List.push(base64String);
+                    }
+
+                    reader.readAsDataURL(file);
+                    reader.addEventListener('load', () => {
+                        // Create new <img> element and add it to the DOM
+                        images.innerHTML += `
+                        <div class="image_box">
+                            <img src='${reader.result}'>
+                        </div>
+                    `;
+                    });
+                }
+
+            }
+            console.log(base64List);
+        }
+
+        function sendData() {
+            let element = document.querySelectorAll(".image_box");
+            if (base64List.length == 5 && fileSize < 1) {
+                let base64Image0 = base64List[0];
+                let base64Image1 = base64List[1];
+                let base64Image2 = base64List[2];
+                let base64Image3 = base64List[3];
+                let base64Image4 = base64List[4];
+                const dict_values = {capture, base64Image0, base64Image1, base64Image2, base64Image3, base64Image4};
+                const s = JSON.stringify(dict_values);
+                console.log(s);
+                $.ajax({
+                    url:"/data_update_images",
+                    type:"POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(s),
+                    success: function(response) {
+                        let reply = JSON.parse(response);
+                        if (reply["success"]) {
+                            swal({
+                                text: reply["message"],
+                                icon: "success",
+                            });
+                        }
+                        else {
+                            swal({
+                                text: reply["message"],
+                                icon: "error",
+                            });
+                        }
+                    }
+                });
+                base64List = [];
+                let mess = document.querySelector("#fileInput");
+                mess.value = "";
+                for (let i = 0; i < element.length; i++)
+                {
+                    element[i].remove();
+                }
+            }
+
+            else {
+                base64List = [];
+                let mess = document.querySelector("#fileInput");
+                mess.value = "";
+                for (let i = 0; i < element.length; i++)
+                {
+                    element[i].remove();
+                }
+                console.log("Must have 5 images and file size less than 1 MB");
+                console.log(base64List);
+                swal({
+                    text: "Must have 5 images and file size less than 1 MB",
+                    icon: "info",
+                });
+            }
+        }
+
+        function openModalSearch() {
+            $.ajax({
+                url: "/task_id_process",
+                type: "POST",
+                contentType: "application/json",
+                success: function(response) {
+                    let reply = JSON.parse(response);
+                    if (reply["data"]) {
+                        modal_search.classList.add('open-search');
+                        let output = '<table id="table-modal">';
+                        output = output + '<thead>' + '<tr>' +
+                            '<th>' + "task_id" + '</th>' +
+                            '<th>' + "status" + '</th>' +
+                            '<th>' + "result" + '</th>' +
+                            '<th>' + "time send" + '</th>' +
+                            '<th>' + "time done" + '</th>' +
+                        '</tr>' + '</thead>';
+                        let rows = reply["message"].length;
+                        console.log(rows);
+                        for (var i = 0; i < rows; i++) {
+                            output = output + '<tr>';
+                            for (var j = 0; j < 5; j++) {
+                                if (j == 1) {
+                                    if (reply["message"][i][j] == "STARTED") {
+                                        output = output + '<td>' + '<i class="fa-solid fa-clock">' + '</i>' + '</td>';
+                                    }
+                                    else {
+                                        output = output + '<td>' + '<i class="fa-solid fa-check" style="color: #2c511f;">' + '</i>' + '</td>';
+                                    }
+                                }
+                                else if (j == 4) {
+                                    if (reply["message"][i][1] == "STARTED") {
+                                        output = output + '<td>' + '</td>';
+                                    }
+                                    else {
+                                        output = output + '<td>' + reply["message"][i][j] + '</td>';
+                                    }
+                                }
+                                else {
+                                    output = output + '<td>' + reply["message"][i][j] + '</td>';
+                                }
+                            }
+                            output = output + '</tr>';
+                        }
+                        output = output + '</table>';
+                        document.querySelector(".content-search").innerHTML = "";
+                        document.querySelector(".content-search").innerHTML = output;
+                    }
+                    else {
+                        swal({
+                            text: reply["message"],
+                            icon: "info",
+                        });
+                    }
+                }
+            })
+        }
+
+        function closeModalSearch() {
+            modal_search.classList.remove('open-search');
+        }
+
+        function openModalCam() {
+            modal_camera.classList.add("open-camera");
+            base64List = [];
+            base64String = "";
+            string_img = [];
+            let video = document.getElementById("video");
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({video: true}).then((stream) => {
+                    video.srcObject = stream;
+                    video.play();
+                });
+            }
+        }
+
+        function Capture() {
+            let canvas = document.createElement("canvas");
+            let video = document.getElementById("video");
+            var preview_images = document.getElementById("preview-images");
+            canvas.style.width = '100%';
+            canvas.style.height = '100px';
+            canvas.getContext("2d").drawImage(video, 0, 0, 300, 150);
+            preview_images.appendChild(canvas);
+            string_img.push(canvas.toDataURL());
+            base64String = canvas.toDataURL().split(",")[1];
+            base64List.push(base64String);
+        }
+
+        function storeImage() {
+            capture = true;
+            let fileSize = 0;
+            swal({
+                title: "Bạn muốn thoát?",
+                icon: "info",
+                buttons: true,
+                dangerMode: true,
+            }).then((willDelete) => {
+                if (willDelete) {
+                    let images = document.getElementById("images");
+                    let element = document.querySelectorAll(".image_box");
+                    for (let i = 0; i < element.length; i++) {
+                        element[i].remove();
+                    }
+                    for (let i = 0; i < string_img.length; i++) {
+                        images.innerHTML += `
+                        <div class="image_box">
+                            <img src='${string_img[i]}'>
+                        </div>
+                        `;
+                    }
+                    for (let i = 0; i < string_img.length; i++) {
+                        fileSize += byteSize(string_img[i]);
+                    }
+                    let video = document.getElementById("video");
+                    const mediaStream = video.srcObject;
+                    const tracks = mediaStream.getTracks();
+                    tracks.forEach(track => track.stop())
+                    var preview_images = document.getElementById("preview-images");
+                    while (preview_images.firstChild) {
+                        preview_images.removeChild(preview_images.firstChild);
+                    }
+                    let file = document.getElementById('fileInput');
+                    file.value = "";
+                    modal_camera.classList.remove("open-camera");
+                    console.log(base64List);
+                    fileSize = fileSize/ 1024**2;
+                    console.log(fileSize);
+                }
+            });
+        }
+
+
+
+        function noBack(){window.history.forward();}
+        noBack();
+        window.onload=noBack;
+        window.onpageshow=function(evt){if(evt.persisted)noBack();}
+        window.onunload=function(){void(0);}
+    </script>
+</body>
+</html>
+
+
+<!--function searchTask() {-->
+<!--            let task_id = document.getElementById("search-field").value;-->
+<!--            if (task_id == "") {-->
+<!--                swal({-->
+<!--                    text: "Hãy nhập thông tin vào ô tìm kiếm",-->
+<!--                    icon: "info",-->
+<!--                });-->
+<!--            }-->
+<!--            else {-->
+<!--                let task_idBase64 = btoa(task_id);-->
+<!--                const dict_values = {task_idBase64};-->
+<!--                const s = JSON.stringify(dict_values);-->
+<!--                $.ajax({-->
+<!--                    url:"/search_task_id",-->
+<!--                    type:"POST",-->
+<!--                    contentType: "application/json",-->
+<!--                    data: JSON.stringify(s),-->
+<!--                    success: function(response) {-->
+<!--                        let reply = JSON.parse(response);-->
+<!--                        if (reply["success"]) {-->
+<!--                            swal({-->
+<!--                                text: reply["message"],-->
+<!--                                icon: "success",-->
+<!--                            });-->
+<!--                        }-->
+<!--                        else {-->
+<!--                            swal({-->
+<!--                                text: reply["message"],-->
+<!--                                icon: "error",-->
+<!--                            });-->
+<!--                        }-->
+<!--                    }-->
+<!--                });-->
+<!--            }-->
+<!--        }-->

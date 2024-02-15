@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" href="/static/index.css">
+    <link rel="stylesheet" href="/static/themify-icons/themify-icons.css">
+    <title>Title</title>
+</head>
+<body id="body">
+
+    <button id="modal-capture" onclick="openModal()">Pop up</button>
+    <div id="result"></div>
+    <div class="modal">
+        <div class="modal-inner">
+            <div class="modal-top">
+                <div class="modal-title"></div>
+            </div>
+            <div class="modal-content row">
+                <div class="column">
+                    <video id="video" width="560" height="480" autoplay></video>
+                </div>
+                <div id="preview-images" class="column"></div>
+            </div>
+            <div class="modal-bottom">
+                <button class="modal-button" onclick="Capture()">Chụp ảnh</button>
+                <button class="modal-button" onclick="storeImage()">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+    <script>
+        const modal = document.querySelector(".modal");
+        const byteSize = str => new Blob([str]).size;
+        let base64List = [];
+        let base64String = "";
+        let string_img = [];
+
+        function Capture() {
+            let canvas = document.createElement("canvas");
+            let video = document.getElementById("video");
+            var preview_images = document.getElementById("preview-images");
+            canvas.style.width = '100%';
+            canvas.style.height = '100px';
+            canvas.getContext("2d").drawImage(video, 0, 0, 300, 150);
+            preview_images.appendChild(canvas);
+            string_img.push(canvas.toDataURL());
+            base64String = canvas.toDataURL().split(",")[1];
+            base64List.push(base64String);
+        }
+
+        function openModal() {
+            modal.classList.add("open");
+            base64List = [];
+            base64String = "";
+            string_img = [];
+            let video = document.getElementById("video");
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({video: true}).then((stream) => {
+                    video.srcObject = stream;
+                    video.play();
+                });
+            }
+        }
+
+        function storeImage() {
+            let fileSize = 0;
+            swal({
+                title: "Bạn muốn thoát?",
+                icon: "info",
+                buttons: true,
+                dangerMode: true,
+            }).then((willDelete) => {
+                if (willDelete) {
+                    var container = document.getElementById("result");
+                    let element = document.querySelectorAll(".image_box");
+                    for (let i = 0; i < element.length; i++) {
+                        element[i].remove();
+                    }
+                    for (let i = 0; i < string_img.length; i++) {
+                        container.innerHTML += `
+                        <div class="image_box">
+                            <img src='${string_img[i]}'>
+                        </div>
+                        `;
+                    }
+                    for (let i = 0; i < string_img.length; i++) {
+                        fileSize += byteSize(string_img[i]);
+                    }
+                    let video = document.getElementById("video");
+                    const mediaStream = video.srcObject;
+                    const tracks = mediaStream.getTracks();
+                    tracks.forEach(track => track.stop())
+                    var preview_images = document.getElementById("preview-images");
+                    while (preview_images.firstChild) {
+                        preview_images.removeChild(preview_images.firstChild);
+                    }
+                    modal.classList.remove("open");
+                    console.log(base64List);
+                    fileSize = fileSize/ 1024**2;
+                    console.log(fileSize);
+                    let base64Image0 = base64List[0];
+                    let base64Image1 = base64List[1];
+                    let base64Image2 = base64List[2];
+                    let base64Image3 = base64List[3];
+                    let base64Image4 = base64List[4];
+                    const dict_values = {base64Image0, base64Image1, base64Image2, base64Image3, base64Image4};
+                    const s = JSON.stringify(dict_values);
+                    console.log(s);
+                    $.ajax({
+                        url:"/send_images",
+                        type:"POST",
+                        contentType: "application/json",
+                        data: JSON.stringify(s)
+                    });
+                }
+            });
+
+        }
+
+
+    </script>
+</body>
+</html>
+
+

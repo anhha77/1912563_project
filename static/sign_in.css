@@ -1,0 +1,280 @@
+/* Reset CSS */
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#main {
+
+}
+
+#header {
+    height: 46px;
+    background-color: #000;
+}
+
+#nav {
+
+}
+
+#nav li {
+    display: inline-block;
+}
+
+#nav > li > a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 24px;
+    line-height: 46px;
+    padding: 0 24px;
+}
+
+#nav li:hover a {
+    color: #000;
+    background-color: #ccc!important;
+    display: inline-block;
+}
+
+#text {
+    text-align: center;
+    color: blue;
+    margin-top: 40px;
+    margin-bottom: 40px;
+}
+
+.form-section {
+    margin: auto;
+    width: 550px;
+    justify-content: center;
+    padding-bottom: 30px;
+}
+
+#capture {
+    padding: 8px 16px;
+    font-size: 16px;
+    font-weight: 400;
+    background-color: #000;
+    color: #fff;
+    cursor: pointer;
+    border: none;
+}
+
+#capture:hover {
+    background-color: #ccc;
+    color: #000;
+}
+
+.form-section .input-section {
+    display: block;
+    width: 100%;
+    margin-bottom: 15px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    font-size: large;
+    font-weight: 400;
+}
+
+input[type=file]::file-selector-button {
+    margin-right: 20px;
+    border: none;
+    background: #084cdf;
+    padding: 10px 20px;
+    border-radius: 10px;
+    color: #fff;
+    cursor: pointer;
+    transition: background .2s ease-in-out;
+  }
+  
+input[type=file]::file-selector-button:hover {
+    background: #0d45a5;
+  }
+
+.button {
+    padding: 8px 16px;
+    font-size: 16px;
+    font-weight: 400;
+    background-color: #000;
+    color: #fff;
+    cursor: pointer;
+    border: none;
+    float: right;
+}
+
+.button:hover {
+    background-color: #ccc;
+    color: #000;
+}
+
+#search {
+    margin-left: 5px;
+}
+
+.modal {
+    --gap: 15px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: var(--gap);
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+}
+
+.modal.open-search {
+    display: flex;
+}
+
+.modal.open-camera {
+    display: flex;
+}
+
+.modal-inner {
+    background: #ffffff;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 4px;
+    display: inline-grid;
+}
+
+.modal-inner.search {
+    max-width: 400px;
+}
+
+.modal-inner.camera {
+    max-width: 800px;
+}
+
+.modal-top {
+    display: flex;
+    align-items: center;
+    background-color: #eeeeee;
+    margin-bottom: 20px;
+}
+
+.modal-title {
+    flex-grow: 1;
+    padding: 0 var(--gap);
+    font-size: 20px;
+}
+
+.modal-close {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: var(--gap);
+    background: none;
+    border: none;
+    outline: none;
+}
+
+.modal-content {
+    padding: 0 var(--gap);
+    line-height: 1.5;
+    max-height: 480px;
+}
+
+.modal-content.row {
+    display: flex;
+}
+
+.column {
+    flex: 50%;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius:  12px;
+}
+
+div#preview-images {
+    margin-left: 15px;
+    overflow: hidden;
+    overflow-y: scroll;
+}
+
+.modal-content #search-field {
+    display: block;
+    width: 100%;
+    margin-bottom: 15px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    font-size: large;
+    font-weight: 400;
+}
+
+.modal-bottom {
+    text-align: right;
+    padding: 0 var(--gap) var(--gap) var(--gap);
+}
+
+.modal-button {
+    display: inline-block;
+    padding: 6px 12px;
+    background-color: #009578;
+    border: none;
+    outline: none;
+    border-radius: 3px;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: large;
+    margin-top: 20px;
+}
+
+.modal-button:hover{
+    background: #008066;
+}
+
+#search-task {
+    display: inline-block;
+    padding: 6px 12px;
+    background-color: #009578;
+    border: none;
+    outline: none;
+    border-radius: 3px;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: large;
+    margin-top: 20px;
+}
+
+#search-task:hover {
+    background: #008066;
+}
+
+.line {
+    margin: auto;
+    width: 50%;
+}
+
+#images {
+    margin: auto;
+    width: 50%;
+    
+}
+
+img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+    margin-top: 15px;
+}
+
+img:hover {
+    box-shadow: 0 0 2px 1px rgba(0, 140, 186, 0.5);
+}
+
