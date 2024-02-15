@@ -6,7 +6,7 @@
 
 ## Hardward for this project
 
-![](./result/JetsonNano-DevKit_Front-Top_Right_trimmed.jpg)
+![](./result/JETSON-NANO-B01-a-800x800.jpg)
 
 ![](./result/Intel-RealSense-D435i.jpg)
 
