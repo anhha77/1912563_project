@@ -6,9 +6,9 @@
 
 ## Hardward for this project
 
-![](./result/JETSON-NANO-B01-a-800x800.jpg | width=500 height=500)
+<img src="./result/JETSON-NANO-B01-a-800x800.jpg" alt="jetson" width="500" height="500"/>
 
-![](./result/Intel-RealSense-D435i.jpg | width=500 height=500)
+<img src="./result/Intel-RealSense-D435i.jpg" alt="realsense" width="500" height="500"/>
 
 ## Setup for face recognition system
 
